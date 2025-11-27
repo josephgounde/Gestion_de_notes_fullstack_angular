@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    restart: 'always'
+    environment:
+      - 'POSTGRES_DB=GradeManagement_db'
+      - 'POSTGRES_PASSWORD=postgres'
+      - 'POSTGRES_USER=postgres'
+    ports:
+      - '5433:5432'
+    #volumes :
+    # db_data:/var/lib/postgresql/data
+
+#  grade_management_backend:
+#    build: . # image
+#    restart: 'always'
+#    ports:
+#      - '8080:8080' # Map host port to container port
+#    environment:
+#      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/GradeManagement_db'
+#      - 'SPRING_DATASOURCE_USERNAME=postgres'
+#      - 'SPRING_DATASOURCE_PASSWORD=postgres'
+#    depends_on:
+#      - postgres
+#    healthcheck:
+#      test: ["CMD-SHELL", "curl -f localhost 8083/actuator/health || exit 1"]
+#      interval: 15s
+#      timeout: 10s
+#      retries: 5

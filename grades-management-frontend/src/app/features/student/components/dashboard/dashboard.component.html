@@ -1,0 +1,131 @@
+<div class="min-h-screen bg-gradient-to-br from-neutral-50 via-primary-50 to-accent-50">
+  <!-- Header -->
+  <header class="bg-white shadow-soft">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-neutral-900">Student Dashboard</h1>
+            <p class="text-sm text-neutral-500">Welcome back, {{ studentName }}</p>
+          </div>
+        </div>
+        <button
+          (click)="logout()"
+          class="flex items-center gap-2 px-4 py-2 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition-colors"
+        >
+          <svg class="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span class="text-neutral-700 font-medium">Logout</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <!-- Overall Average Card -->
+      <div class="bg-white rounded-2xl shadow-card p-6">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-neutral-500">Overall Average</p>
+            <p class="text-3xl font-bold" [ngClass]="getGradeColor(overallAverage)">
+              {{ overallAverage | number:'1.2-2' }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Grades Card -->
+      <div class="bg-white rounded-2xl shadow-card p-6">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-accent-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-neutral-500">Total Grades</p>
+            <p class="text-3xl font-bold text-neutral-900">{{ grades.length }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Card -->
+      <div class="bg-white rounded-2xl shadow-card p-6">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm text-neutral-500">Status</p>
+            <p class="text-xl font-bold text-green-600">Active</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grades Table -->
+    <div class="bg-white rounded-2xl shadow-card p-6">
+      <h2 class="text-xl font-bold text-neutral-900 mb-6">My Grades</h2>
+
+      <!-- Loading State -->
+      <div *ngIf="loading" class="text-center py-12">
+        <svg class="animate-spin h-10 w-10 text-primary-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="text-neutral-600">Loading grades...</p>
+      </div>
+
+      <!-- Grades Table -->
+      <div *ngIf="!loading && grades.length > 0" class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-neutral-200">
+              <th class="text-left py-3 px-4 font-semibold text-neutral-700">Subject</th>
+              <th class="text-left py-3 px-4 font-semibold text-neutral-700">Grade</th>
+              <th class="text-left py-3 px-4 font-semibold text-neutral-700">Date</th>
+              <th class="text-left py-3 px-4 font-semibold text-neutral-700">Comment</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let grade of grades" class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+              <td class="py-3 px-4 font-medium text-neutral-900">{{ grade.subjectName }}</td>
+              <td class="py-3 px-4">
+                <span [ngClass]="getGradeColor(grade.value)" class="font-bold text-lg">
+                  {{ grade.value }}
+                </span>
+              </td>
+              <td class="py-3 px-4 text-neutral-600">{{ grade.date | date:'shortDate' }}</td>
+              <td class="py-3 px-4 text-neutral-600">{{ grade.comment || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loading && grades.length === 0" class="text-center py-12">
+        <svg class="w-20 h-20 text-neutral-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <p class="text-neutral-600 text-lg">No grades available yet</p>
+        <p class="text-neutral-400 text-sm mt-2">Your grades will appear here once your teachers enter them</p>
+      </div>
+    </div>
+  </main>
+</div>
