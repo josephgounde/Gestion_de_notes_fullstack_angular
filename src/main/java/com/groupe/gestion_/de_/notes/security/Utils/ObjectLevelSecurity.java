@@ -1,16 +1,33 @@
 package com.groupe.gestion_.de_.notes.security.Utils;
 
-import com.groupe.gestion_.de_.notes.model.*;
-import com.groupe.gestion_.de_.notes.repository.*;
-import lombok.RequiredArgsConstructor;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import com.groupe.gestion_.de_.notes.model.ClassSubject;
+import com.groupe.gestion_.de_.notes.model.Grade;
+import com.groupe.gestion_.de_.notes.model.Student;
+import com.groupe.gestion_.de_.notes.model.TeacherClass;
+import com.groupe.gestion_.de_.notes.model.User;
+import com.groupe.gestion_.de_.notes.repository.ClassSubjectRepository;
+import com.groupe.gestion_.de_.notes.repository.EnrollmentRepository;
+import com.groupe.gestion_.de_.notes.repository.GradeRepository;
+import com.groupe.gestion_.de_.notes.repository.StudentRepository;
+import com.groupe.gestion_.de_.notes.repository.SubjectRepository;
+import com.groupe.gestion_.de_.notes.repository.TeacherClassRepository;
+import com.groupe.gestion_.de_.notes.repository.TeacherRepository;
+import com.groupe.gestion_.de_.notes.repository.UserRepository;
 
-@Service("ObjectLevelSecurity") // Must be a Spring bean and have a name for SpEL expressions
+import lombok.RequiredArgsConstructor;
+
+@Service("objectLevelSecurity") // Must be a Spring bean and have a name for SpEL expressions
 @RequiredArgsConstructor
 public class
 ObjectLevelSecurity {
