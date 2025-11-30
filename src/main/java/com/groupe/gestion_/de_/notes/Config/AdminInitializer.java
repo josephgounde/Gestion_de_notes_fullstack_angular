@@ -1,15 +1,15 @@
 package com.groupe.gestion_.de_.notes.Config;
 
-import com.groupe.gestion_.de_.notes.model.Role;
-import com.groupe.gestion_.de_.notes.model.User;
-import com.groupe.gestion_.de_.notes.repository.UserRepository;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
+import com.groupe.gestion_.de_.notes.model.Role;
+import com.groupe.gestion_.de_.notes.model.User;
+import com.groupe.gestion_.de_.notes.repository.UserRepository;
 
 @Component
 public class AdminInitializer implements CommandLineRunner {
@@ -51,7 +51,7 @@ public class AdminInitializer implements CommandLineRunner {
                     .build();
 
             userRepository.save(newAdmin);
-            System.out.println("Initial ADMIN user created successfully!");
+            System.out.println("Initial ADMIN user created successfully! \n username : admin \n password : adminpass ");
         } else {
             System.out.println("ADMIN user already exists. Skipping initial admin creation.");
         }
