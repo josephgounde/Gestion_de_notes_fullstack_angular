@@ -1,0 +1,292 @@
+<div class="p-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-neutral-900">User Management</h1>
+      <p class="text-neutral-600">Manage students, teachers, and administrators</p>
+    </div>
+    <div class="flex gap-3">
+      <button
+        (click)="openAddModal(Role.STUDENT)"
+        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors flex items-center gap-2"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Add Student
+      </button>
+      <button
+        (click)="openAddModal(Role.TEACHER)"
+        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors flex items-center gap-2"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Add Teacher
+      </button>
+    </div>
+  </div>
+
+  <!-- Search and Filter -->
+  <div class="bg-white rounded-2xl shadow-card p-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-neutral-700 mb-2">Search</label>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="onSearch()"
+          placeholder="Search by name, email, or username..."
+          class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-neutral-700 mb-2">Filter by Role</label>
+        <select
+          [(ngModel)]="filterRole"
+          (change)="onFilterRole()"
+          class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
+          <option value="ALL">All Roles</option>
+          <option value="STUDENT">Students</option>
+          <option value="TEACHER">Teachers</option>
+          <option value="ADMIN">Admins</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div class="bg-white rounded-2xl shadow-card overflow-hidden">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="text-center py-12">
+      <svg class="animate-spin h-10 w-10 text-primary-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="text-neutral-600">Loading users...</p>
+    </div>
+
+    <!-- Users Table -->
+    <div *ngIf="!loading && filteredUsers.length > 0" class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-neutral-50 border-b border-neutral-200">
+          <tr>
+            <th class="text-left py-4 px-6 font-semibold text-neutral-700">User</th>
+            <th class="text-left py-4 px-6 font-semibold text-neutral-700">Email</th>
+            <th class="text-left py-4 px-6 font-semibold text-neutral-700">Role</th>
+            <th class="text-left py-4 px-6 font-semibold text-neutral-700">ID Number</th>
+            <th class="text-right py-4 px-6 font-semibold text-neutral-700">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of filteredUsers" class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+            <td class="py-4 px-6">
+              <div>
+                <p class="font-semibold text-neutral-900">{{ user.firstname }} {{ user.lastname }}</p>
+                <p class="text-sm text-neutral-500">{{ '@' }}{{ user.username }}</p>
+              </div>
+            </td>
+            <td class="py-4 px-6 text-neutral-700">{{ user.email }}</td>
+            <td class="py-4 px-6">
+              <span [ngClass]="getRoleBadgeClass(user.role)" class="px-3 py-1 rounded-full text-sm font-medium">
+                {{ getRoleLabel(user.role) }}
+              </span>
+            </td>
+            <td class="py-4 px-6 text-neutral-700">
+              {{ getUserIdNumber(user) }}
+            </td>
+            <td class="py-4 px-6">
+              <div class="flex justify-end gap-2">
+                <button
+                  (click)="openEditModal(user)"
+                  class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="Edit user"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button
+                  (click)="deleteUser(user)"
+                  class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete user"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && filteredUsers.length === 0" class="text-center py-12">
+      <svg class="w-20 h-20 text-neutral-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+      <p class="text-neutral-600 text-lg">No users found</p>
+      <p class="text-neutral-400 text-sm mt-2">Try adjusting your search or filters</p>
+    </div>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div *ngIf="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
+    <div class="p-6 border-b border-neutral-200">
+      <h2 class="text-xl font-bold text-neutral-900">Add {{ selectedRole === Role.STUDENT ? 'Student' : 'Teacher' }}</h2>
+    </div>
+    <form [formGroup]="userForm" (ngSubmit)="onSubmitAdd()" class="p-6">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 mb-2">Username *</label>
+          <input
+            type="text"
+            formControlName="username"
+            class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="Enter username"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 mb-2">Email *</label>
+          <input
+            type="email"
+            formControlName="email"
+            class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="Enter email"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 mb-2">Password *</label>
+          <input
+            type="password"
+            formControlName="password"
+            class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="Enter password"
+          />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-neutral-700 mb-2">First Name *</label>
+            <input
+              type="text"
+              formControlName="firstName"
+              class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="First name"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-neutral-700 mb-2">Last Name *</label>
+            <input
+              type="text"
+              formControlName="lastName"
+              class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="Last name"
+            />
+          </div>
+        </div>
+        <div *ngIf="selectedRole === Role.STUDENT">
+          <label class="block text-sm font-medium text-neutral-700 mb-2">Student ID</label>
+          <input
+            type="text"
+            formControlName="studentIdNum"
+            class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="Student ID (optional)"
+          />
+        </div>
+        <div *ngIf="selectedRole === Role.TEACHER">
+          <label class="block text-sm font-medium text-neutral-700 mb-2">Teacher ID</label>
+          <input
+            type="text"
+            formControlName="teacherIdNum"
+            class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="Teacher ID (optional)"
+          />
+        </div>
+      </div>
+      <div class="flex gap-3 mt-6">
+        <button
+          type="button"
+          (click)="closeAddModal()"
+          class="flex-1 px-4 py-2 border border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          [disabled]="userForm.invalid || loading"
+          class="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {{ loading ? 'Creating...' : 'Create User' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit User Modal -->
+<div *ngIf="showEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
+    <div class="p-6 border-b border-neutral-200">
+      <h2 class="text-xl font-bold text-neutral-900">Edit User</h2>
+    </div>
+    <form [formGroup]="userForm" (ngSubmit)="onSubmitEdit()" class="p-6">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 mb-2">Username *</label>
+          <input
+            type="text"
+            formControlName="username"
+            class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 mb-2">Email *</label>
+          <input
+            type="email"
+            formControlName="email"
+            class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-neutral-700 mb-2">First Name *</label>
+            <input
+              type="text"
+              formControlName="firstName"
+              class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-neutral-700 mb-2">Last Name *</label>
+            <input
+              type="text"
+              formControlName="lastName"
+              class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-6">
+        <button
+          type="button"
+          (click)="closeEditModal()"
+          class="flex-1 px-4 py-2 border border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          [disabled]="userForm.invalid || loading"
+          class="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {{ loading ? 'Updating...' : 'Update User' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
