@@ -27,7 +27,7 @@ import com.groupe.gestion_.de_.notes.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
-@Service("objectLevelSecurity") // Must be a Spring bean and have a name for SpEL expressions
+@Service("objectLevelSecurity")
 @RequiredArgsConstructor
 public class
 ObjectLevelSecurity {

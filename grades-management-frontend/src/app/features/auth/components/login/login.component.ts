@@ -47,7 +47,7 @@ export class LoginComponent implements OnInit {
     return this.loginForm.controls;
   }
 
-  onSubmit(): void {
+/*  onSubmit(): void {
     // Reset error
     this.error = '';
 
@@ -85,7 +85,52 @@ export class LoginComponent implements OnInit {
         console.error('Login error:', error);
       }
     });
+  }*/
+
+  onSubmit(): void {
+  this.error = '';
+
+  if (this.loginForm.invalid) {
+    Object.keys(this.loginForm.controls).forEach(key => {
+      this.loginForm.get(key)?.markAsTouched();
+    });
+    return;
   }
+
+  const credentials: LoginRequest = {
+    username: this.loginForm.value.username,
+    password: this.loginForm.value.password
+  };
+
+  this.loading = true;
+
+  this.authService.login(credentials).subscribe({
+    next: (response) => {
+      console.log('✅ Login successful, response:', response);
+      console.log('✅ Token received:', response.token ? response.token.substring(0, 20) + '...' : 'NO TOKEN');
+      
+      // Check if token is stored
+      const storedToken = this.authService.getToken();
+      console.log('✅ Token stored in localStorage:', storedToken ? storedToken.substring(0, 20) + '...' : 'NOT STORED');
+      
+      this.loading = false;
+      
+      // Add a small delay to ensure token is saved before navigation
+      setTimeout(() => {
+        if (this.returnUrl) {
+          this.router.navigateByUrl(this.returnUrl);
+        } else {
+          this.authService.navigateByRole();
+        }
+      }, 100);
+    },
+    error: (error) => {
+      this.loading = false;
+      this.error = error.message || 'Invalid username or password';
+      console.error('❌ Login error:', error);
+    }
+  });
+}  
 
   // Helper method to show field errors
   showError(field: string): boolean {

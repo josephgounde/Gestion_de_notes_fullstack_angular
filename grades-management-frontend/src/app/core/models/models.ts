@@ -163,6 +163,8 @@ export interface JwtResponse {
   username: string;
   email: string;
   roles: string[];
+  studentIdNum?: string;  // For students
+  teacherIdNum?: string;  // For teachers
 }
 
 // Login Record interfaces
