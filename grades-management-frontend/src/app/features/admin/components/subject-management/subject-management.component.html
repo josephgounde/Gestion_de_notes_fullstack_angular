@@ -16,6 +16,35 @@
     </button>
   </div>
 
+  <!-- Global Success/Error Messages -->
+  <div *ngIf="successMessage" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-start gap-3">
+    <svg class="w-5 h-5 text-green-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+    </svg>
+    <div class="flex-1">
+      <p class="text-green-800 font-medium">{{ successMessage }}</p>
+    </div>
+    <button (click)="successMessage = ''" class="text-green-600 hover:text-green-800">
+      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+      </svg>
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+    <svg class="w-5 h-5 text-red-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+    </svg>
+    <div class="flex-1">
+      <p class="text-red-800 font-medium">{{ errorMessage }}</p>
+    </div>
+    <button (click)="errorMessage = ''" class="text-red-600 hover:text-red-800">
+      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+      </svg>
+    </button>
+  </div>
+
   <!-- Search -->
   <div class="bg-white rounded-2xl shadow-card p-4 mb-6">
     <div>
@@ -41,6 +70,15 @@
       <p class="text-neutral-600">Loading subjects...</p>
     </div>
 
+    <!-- Empty State -->
+    <div *ngIf="!loading && filteredSubjects.length === 0" class="col-span-full text-center py-12">
+      <svg class="w-16 h-16 text-neutral-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      <p class="text-neutral-600 text-lg">No subjects found</p>
+      <p class="text-neutral-500 text-sm">{{ searchTerm ? 'Try a different search term' : 'Click "Add Subject" to create one' }}</p>
+    </div>
+
     <!-- Subject Cards -->
     <div *ngFor="let subject of filteredSubjects" class="bg-white rounded-2xl shadow-card p-6 hover:shadow-lg transition-shadow">
       <div class="flex justify-between items-start mb-4">
@@ -51,173 +89,269 @@
             </span>
           </div>
           <h3 class="text-lg font-bold text-neutral-900 mb-1">{{ subject.name }}</h3>
-          <p *ngIf="subject.description" class="text-sm text-neutral-600 mb-2">{{ subject.description }}</p>
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-            </svg>
-            <span class="text-sm text-neutral-600">
-              Coefficient: <span [ngClass]="getCoefficientColor(subject.coefficient)" class="font-bold">{{ subject.coefficient }}</span>
-            </span>
-          </div>
+          <p class="text-neutral-600 text-sm">{{ subject.description }}</p>
         </div>
       </div>
-
-      <!-- Actions -->
-      <div class="flex gap-2 pt-4 border-t border-neutral-200">
-        <button
-          (click)="openEditModal(subject)"
-          class="flex-1 px-4 py-2 border border-neutral-300 text-neutral-700 hover:bg-neutral-50 rounded-lg transition-colors flex items-center justify-center gap-2"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-          Edit
-        </button>
-        <button
-          (click)="deleteSubject(subject)"
-          class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-        </button>
+      
+      <div class="flex items-center justify-between pt-4 border-t border-neutral-200">
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-neutral-600">Coefficient:</span>
+          <span class="text-lg font-bold text-primary-600">{{ subject.coefficient }}</span>
+        </div>
+        <div class="flex gap-2">
+          <button
+            (click)="openEditModal(subject)"
+            class="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+            title="Edit"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+          </button>
+          <button
+            (click)="deleteSubject(subject.id)"
+            class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            title="Delete"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </button>
+        </div>
       </div>
-    </div>
-
-    <!-- Empty State -->
-    <div *ngIf="!loading && filteredSubjects.length === 0" class="col-span-full text-center py-12">
-      <svg class="w-20 h-20 text-neutral-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-      </svg>
-      <p class="text-neutral-600 text-lg">No subjects found</p>
-      <p class="text-neutral-400 text-sm mt-2">Add your first subject to get started</p>
     </div>
   </div>
 </div>
 
 <!-- Add Subject Modal -->
-<div *ngIf="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
+<div *ngIf="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
     <div class="p-6 border-b border-neutral-200">
       <h2 class="text-xl font-bold text-neutral-900">Add Subject</h2>
     </div>
+    
     <form [formGroup]="subjectForm" (ngSubmit)="onSubmitAdd()" class="p-6">
+      <!-- Modal Error Message -->
+      <div *ngIf="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+        <svg class="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        </svg>
+        <p class="text-red-800 text-sm">{{ errorMessage }}</p>
+      </div>
+
+      <!-- Modal Success Message -->
+      <div *ngIf="successMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-start gap-2">
+        <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <p class="text-green-800 text-sm">{{ successMessage }}</p>
+      </div>
+
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-neutral-700 mb-2">Subject Code *</label>
+          <label class="block text-sm font-medium text-neutral-700 mb-2">
+            Subject Code *
+          </label>
           <input
             type="text"
             formControlName="subjectCode"
+            [class.border-red-500]="subjectForm.get('subjectCode')?.invalid && subjectForm.get('subjectCode')?.touched"
             class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 uppercase"
             placeholder="e.g., MATH101"
           />
-          <p class="text-xs text-neutral-500 mt-1">Use uppercase letters and numbers only</p>
+          <p *ngIf="getFieldError('subjectCode')" class="text-xs text-red-600 mt-1">
+            {{ getFieldError('subjectCode') }}
+          </p>
+          <p *ngIf="!getFieldError('subjectCode')" class="text-xs text-neutral-500 mt-1">
+            Use uppercase letters and numbers only
+          </p>
         </div>
+
         <div>
-          <label class="block text-sm font-medium text-neutral-700 mb-2">Subject Name *</label>
+          <label class="block text-sm font-medium text-neutral-700 mb-2">
+            Subject Name *
+          </label>
           <input
             type="text"
             formControlName="name"
+            [class.border-red-500]="subjectForm.get('name')?.invalid && subjectForm.get('name')?.touched"
             class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="e.g., Mathematics"
           />
+          <p *ngIf="getFieldError('name')" class="text-xs text-red-600 mt-1">
+            {{ getFieldError('name') }}
+          </p>
         </div>
+
         <div>
-          <label class="block text-sm font-medium text-neutral-700 mb-2">Description</label>
+          <label class="block text-sm font-medium text-neutral-700 mb-2">
+            Description *
+          </label>
           <textarea
             formControlName="description"
-            rows="3"
+            [class.border-red-500]="subjectForm.get('description')?.invalid && subjectForm.get('description')?.touched"
             class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="Optional description..."
+            placeholder="Brief description of the subject"
+            rows="3"
           ></textarea>
+          <p *ngIf="getFieldError('description')" class="text-xs text-red-600 mt-1">
+            {{ getFieldError('description') }}
+          </p>
         </div>
+
         <div>
-          <label class="block text-sm font-medium text-neutral-700 mb-2">Coefficient *</label>
+          <label class="block text-sm font-medium text-neutral-700 mb-2">
+            Coefficient *
+          </label>
           <input
             type="number"
             formControlName="coefficient"
+            [class.border-red-500]="subjectForm.get('coefficient')?.invalid && subjectForm.get('coefficient')?.touched"
             step="0.5"
             min="0.5"
             max="10"
             class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="1.0"
           />
-          <p class="text-xs text-neutral-500 mt-1">Value between 0.5 and 10</p>
+          <p *ngIf="getFieldError('coefficient')" class="text-xs text-red-600 mt-1">
+            {{ getFieldError('coefficient') }}
+          </p>
+          <p *ngIf="!getFieldError('coefficient')" class="text-xs text-neutral-500 mt-1">
+            Value between 0.5 and 10
+          </p>
         </div>
       </div>
+
       <div class="flex gap-3 mt-6">
         <button
           type="button"
           (click)="closeAddModal()"
-          class="flex-1 px-4 py-2 border border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 transition-colors"
+          [disabled]="loading"
+          class="flex-1 px-4 py-2 border border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>
         <button
           type="submit"
           [disabled]="subjectForm.invalid || loading"
-          class="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          {{ loading ? 'Creating...' : 'Create Subject' }}
+          <svg *ngIf="loading" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>{{ loading ? 'Creating...' : 'Create Subject' }}</span>
         </button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- Edit Subject Modal -->
-<div *ngIf="showEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
+<!-- Edit Subject Modal (similar structure to Add modal) -->
+<div *ngIf="showEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
     <div class="p-6 border-b border-neutral-200">
       <h2 class="text-xl font-bold text-neutral-900">Edit Subject</h2>
-      <p class="text-sm text-neutral-600 mt-1">Subject Code: {{ selectedSubject?.subjectCode }}</p>
     </div>
+    
     <form [formGroup]="subjectForm" (ngSubmit)="onSubmitEdit()" class="p-6">
+      <!-- Modal Error Message -->
+      <div *ngIf="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+        <svg class="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        </svg>
+        <p class="text-red-800 text-sm">{{ errorMessage }}</p>
+      </div>
+
+      <!-- Modal Success Message -->
+      <div *ngIf="successMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-start gap-2">
+        <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <p class="text-green-800 text-sm">{{ successMessage }}</p>
+      </div>
+
       <div class="space-y-4">
+        <!-- Same form fields as Add modal -->
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 mb-2">Subject Code *</label>
+          <input
+            type="text"
+            formControlName="subjectCode"
+            [class.border-red-500]="subjectForm.get('subjectCode')?.invalid && subjectForm.get('subjectCode')?.touched"
+            class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 uppercase"
+            placeholder="e.g., MATH101"
+          />
+          <p *ngIf="getFieldError('subjectCode')" class="text-xs text-red-600 mt-1">
+            {{ getFieldError('subjectCode') }}
+          </p>
+        </div>
+
         <div>
           <label class="block text-sm font-medium text-neutral-700 mb-2">Subject Name *</label>
           <input
             type="text"
             formControlName="name"
+            [class.border-red-500]="subjectForm.get('name')?.invalid && subjectForm.get('name')?.touched"
             class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="e.g., Mathematics"
           />
+          <p *ngIf="getFieldError('name')" class="text-xs text-red-600 mt-1">
+            {{ getFieldError('name') }}
+          </p>
         </div>
+
         <div>
-          <label class="block text-sm font-medium text-neutral-700 mb-2">Description</label>
+          <label class="block text-sm font-medium text-neutral-700 mb-2">Description *</label>
           <textarea
             formControlName="description"
-            rows="3"
+            [class.border-red-500]="subjectForm.get('description')?.invalid && subjectForm.get('description')?.touched"
             class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="Optional description..."
+            placeholder="Brief description of the subject"
+            rows="3"
           ></textarea>
+          <p *ngIf="getFieldError('description')" class="text-xs text-red-600 mt-1">
+            {{ getFieldError('description') }}
+          </p>
         </div>
+
         <div>
           <label class="block text-sm font-medium text-neutral-700 mb-2">Coefficient *</label>
           <input
             type="number"
             formControlName="coefficient"
+            [class.border-red-500]="subjectForm.get('coefficient')?.invalid && subjectForm.get('coefficient')?.touched"
             step="0.5"
             min="0.5"
             max="10"
             class="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="1.0"
           />
+          <p *ngIf="getFieldError('coefficient')" class="text-xs text-red-600 mt-1">
+            {{ getFieldError('coefficient') }}
+          </p>
         </div>
       </div>
+
       <div class="flex gap-3 mt-6">
         <button
           type="button"
           (click)="closeEditModal()"
-          class="flex-1 px-4 py-2 border border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 transition-colors"
+          [disabled]="loading"
+          class="flex-1 px-4 py-2 border border-neutral-300 text-neutral-700 rounded-xl hover:bg-neutral-50 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>
         <button
           type="submit"
           [disabled]="subjectForm.invalid || loading"
-          class="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          {{ loading ? 'Updating...' : 'Update Subject' }}
+          <svg *ngIf="loading" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>{{ loading ? 'Updating...' : 'Update Subject' }}</span>
         </button>
       </div>
     </form>

@@ -1,3 +1,7 @@
+// ============================================
+// Helper Types
+// ============================================
+
 // Role enum
 export enum Role {
   ADMIN = 'ADMIN',
@@ -12,13 +16,16 @@ export enum TranscriptStatus {
   ERROR = 'ERROR'
 }
 
-// Base User interfaces
+// ============================================
+// User Models
+// ============================================
+
 export interface UserRequest {
   username: string;
+  email: string;
   password: string;
   firstname: string;
   lastname: string;
-  email: string;
 }
 
 export interface UserResponse {
@@ -27,10 +34,9 @@ export interface UserResponse {
   firstname: string;
   lastname: string;
   email: string;
-  role: Role;
+  role: string;
 }
 
-// Student interfaces
 export interface StudentRequest extends UserRequest {
   studentIdNum: string;
 }
@@ -39,7 +45,6 @@ export interface StudentResponse extends UserResponse {
   studentIdNum: string;
 }
 
-// Teacher interfaces
 export interface TeacherRequest extends UserRequest {
   teacherIdNum: string;
 }
@@ -47,6 +52,7 @@ export interface TeacherRequest extends UserRequest {
 export interface TeacherResponse extends UserResponse {
   teacherIdNum: string;
 }
+
 
 // Admin interface
 export interface AdminResponse extends UserResponse {
@@ -65,7 +71,11 @@ export interface ClassResponse {
   name: string;
 }
 
-// Subject interfaces
+
+// ============================================
+// Subject Models
+// ============================================
+
 export interface SubjectRequest {
   subjectCode: string;
   name: string;
@@ -81,7 +91,26 @@ export interface SubjectResponse {
   description: string;
 }
 
-// Grade interfaces
+// ============================================
+// Class Models
+// ============================================
+
+export interface ClassRequest {
+  name: string;
+  academicYear: string;
+}
+
+export interface ClassResponse {
+  id: number;
+  name: string;
+  academicYear: string;
+}
+
+
+// ============================================
+// Grade Models
+// ============================================
+
 export interface GradeRequest {
   value: number;
   date: string; // ISO date string
@@ -109,13 +138,16 @@ export interface GradeUpdateRequest {
   comment?: string;
 }
 
-// Enrollment interfaces
+
+// ============================================
+// Enrollment Models
+// ============================================
+
 export interface EnrollmentRequest {
   studentIdNum: string;
   classId: number;
   subjectCode: string;
 }
-
 export interface EnrollmentResponse {
   id: number;
   enrollmentDate?: string;
@@ -126,7 +158,12 @@ export interface EnrollmentResponse {
   classEntity: ClassResponse;
 }
 
-// Teacher-Class Assignment interfaces
+
+
+// ============================================
+// Teacher-Class Assignment Models
+// ============================================
+
 export interface TeacherClassRequest {
   teacherIdNum: string;
   classId: number;
@@ -137,6 +174,7 @@ export interface TeacherClassResponse {
   teacher: TeacherResponse;
   classEntity: ClassResponse;
 }
+
 
 // Class-Subject interfaces
 export interface ClassSubjectRequest {
@@ -192,19 +230,24 @@ export interface EmailRequest {
   body: string;
 }
 
-// Dashboard Statistics interfaces
-export interface StudentStatistics {
-  overallAverage: number;
-  subjectAverages: { [subjectCode: string]: number };
-  totalGrades: number;
-  totalSubjects: number;
-}
+
+// ============================================
+// Dashboard Statistics (Frontend Only)
+// ============================================
 
 export interface TeacherStatistics {
   totalClasses: number;
   totalStudents: number;
   totalGradesRecorded: number;
   averageClassPerformance: number;
+  pendingGrades: number;
+}
+
+export interface StudentStatistics {
+  overallAverage: number;
+  subjectAverages: { [subjectCode: string]: number };
+  totalGrades: number;
+  totalSubjects: number;
 }
 
 export interface AdminStatistics {
@@ -215,6 +258,21 @@ export interface AdminStatistics {
   totalGrades: number;
   averageSystemPerformance: number;
 }
+
+export interface QuickAction {
+  title: string;
+  description: string;
+  icon: string;
+  route: string;
+  color: string;
+}
+
+export interface RecentActivity {
+  type: 'grade' | 'class' | 'report' | 'student';
+  message: string;
+  timestamp: Date;
+}
+
 
 // Chart data interface
 export interface ChartData {

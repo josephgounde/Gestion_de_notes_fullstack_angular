@@ -1,13 +1,16 @@
 package com.groupe.gestion_.de_.notes.services.ServiceInterface;
 
-import com.groupe.gestion_.de_.notes.dto.*;
 import java.util.List;
 import java.util.Optional;
+
+import com.groupe.gestion_.de_.notes.dto.GradeRequest;
+import com.groupe.gestion_.de_.notes.dto.GradeResponse;
 
 public interface GradesService {
     GradeResponse addGrade(GradeRequest request);
     Optional<GradeResponse> findGradeById(Long id);
     List<GradeResponse> getAllGrades();
+    List<GradeResponse> getGradesByTeacher(String teacherIdNum);
     List<GradeResponse> findGradesByStudentIdNum(String studentIdNum);
     List<GradeResponse> findGradesBySubjectCode(String subjectCode);
     List<GradeResponse> findGradesByStudentIdNumAndSubjectCode(String studentIdNum, String subjectCode);

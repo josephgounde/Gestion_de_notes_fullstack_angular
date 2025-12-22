@@ -1,12 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import {
-  GradeRequest,
-  GradeResponse,
-  GradeUpdateRequest
-} from '../models/models';
+import { GradeRequest, GradeResponse } from '../models/models';
 
 @Injectable({
   providedIn: 'root'
@@ -17,14 +13,15 @@ export class GradesService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Create a new grade
+   * Create a new grade (Teacher and Admin)
+   * Teachers can only record grades for subjects they're assigned to
    */
-  addGrade(grade: GradeRequest): Observable<GradeResponse> {
-    return this.http.post<GradeResponse>(`${this.apiUrl}/add`, grade);
+  addGrade(gradeData: GradeRequest): Observable<GradeResponse> {
+    return this.http.post<GradeResponse>(`${this.apiUrl}/add`, gradeData);
   }
 
   /**
-   * Get grade by ID
+   * Get a specific grade by ID
    */
   getGradeById(id: number): Observable<GradeResponse> {
     return this.http.get<GradeResponse>(`${this.apiUrl}/${id}`);
@@ -38,66 +35,74 @@ export class GradesService {
   }
 
   /**
-   * Get grades by student ID number
+   * Get all grades recorded by a specific teacher
+   * @param teacherIdNum - The teacher's ID number (e.g., "TCH001")
    */
-  getGradesByStudentIdNum(studentIdNum: string): Observable<GradeResponse[]> {
+  getGradesByTeacher(teacherIdNum: string): Observable<GradeResponse[]> {
+    return this.http.get<GradeResponse[]>(`${this.apiUrl}/teacher/${teacherIdNum}`);
+  }
+
+  /**
+   * Get all grades for a specific student
+   * @param studentIdNum - The student's ID number (e.g., "STU001")
+   */
+  getGradesByStudent(studentIdNum: string): Observable<GradeResponse[]> {
     return this.http.get<GradeResponse[]>(`${this.apiUrl}/student/${studentIdNum}`);
   }
 
   /**
-   * Get grades by subject code
+   * Get all grades for a specific subject
+   * @param subjectCode - The subject code (e.g., "MATH101")
    */
-  getGradesBySubjectCode(subjectCode: string): Observable<GradeResponse[]> {
+  getGradesBySubject(subjectCode: string): Observable<GradeResponse[]> {
     return this.http.get<GradeResponse[]>(`${this.apiUrl}/subject/${subjectCode}`);
   }
 
   /**
-   * Get grades by student ID number and subject code
+   * Get grades for a specific student in a specific subject
+   * @param studentIdNum - The student's ID number
+   * @param subjectCode - The subject code
    */
   getGradesByStudentAndSubject(studentIdNum: string, subjectCode: string): Observable<GradeResponse[]> {
-    return this.http.get<GradeResponse[]>(
-      `${this.apiUrl}/student/${studentIdNum}/subject/${subjectCode}`
-    );
+    return this.http.get<GradeResponse[]>(`${this.apiUrl}/student/${studentIdNum}/subject/${subjectCode}`);
   }
 
   /**
-   * Update grade
+   * Update an existing grade (Teacher and Admin)
    */
-  updateGrade(id: number, grade: GradeRequest): Observable<GradeResponse> {
-    return this.http.put<GradeResponse>(`${this.apiUrl}/${id}`, grade);
+  updateGrade(id: number, gradeData: GradeRequest): Observable<GradeResponse> {
+    return this.http.put<GradeResponse>(`${this.apiUrl}/${id}`, gradeData);
   }
 
   /**
-   * Delete grade (Admin only)
+   * Delete a grade (Admin only)
    */
   deleteGrade(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
   /**
-   * Calculate student average grade for a subject
+   * Calculate average grade for a student in a specific subject
+   * @param studentIdNum - The student's ID number
+   * @param subjectCode - The subject code
    */
   calculateStudentAverageForSubject(studentIdNum: string, subjectCode: string): Observable<number> {
-    return this.http.get<number>(
-      `${this.apiUrl}/averages/student/${studentIdNum}/subject/${subjectCode}`
-    );
+    return this.http.get<number>(`${this.apiUrl}/averages/student/${studentIdNum}/subject/${subjectCode}`);
   }
 
   /**
-   * Calculate student overall average grade
+   * Calculate overall weighted average for a student across all subjects
+   * @param studentIdNum - The student's ID number
    */
   calculateStudentOverallAverage(studentIdNum: string): Observable<number> {
-    return this.http.get<number>(
-      `${this.apiUrl}/averages/student/overall/${studentIdNum}`
-    );
+    return this.http.get<number>(`${this.apiUrl}/averages/student/overall/${studentIdNum}`);
   }
 
   /**
-   * Calculate subject average grade across all students
+   * Calculate average grade for a subject across all students
+   * @param subjectCode - The subject code
    */
   calculateSubjectAverage(subjectCode: string): Observable<number> {
-    return this.http.get<number>(
-      `${this.apiUrl}/averages/subject/${subjectCode}`
-    );
+    return this.http.get<number>(`${this.apiUrl}/averages/subject/${subjectCode}`);
   }
 }

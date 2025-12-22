@@ -12,10 +12,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.groupe.gestion_.de_.notes.model.ClassSubject;
+import com.groupe.gestion_.de_.notes.model.Enrollment;
 import com.groupe.gestion_.de_.notes.model.Grade;
 import com.groupe.gestion_.de_.notes.model.Student;
+import com.groupe.gestion_.de_.notes.model.Teacher;
 import com.groupe.gestion_.de_.notes.model.TeacherClass;
 import com.groupe.gestion_.de_.notes.model.User;
+import com.groupe.gestion_.de_.notes.repository.ClassRepository;
 import com.groupe.gestion_.de_.notes.repository.ClassSubjectRepository;
 import com.groupe.gestion_.de_.notes.repository.EnrollmentRepository;
 import com.groupe.gestion_.de_.notes.repository.GradeRepository;
@@ -29,72 +32,66 @@ import lombok.RequiredArgsConstructor;
 
 @Service("objectLevelSecurity")
 @RequiredArgsConstructor
-public class
-ObjectLevelSecurity {
+public class ObjectLevelSecurity {
 
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
     private final UserRepository userRepository;
     private final GradeRepository gradeRepository;
-    private final SubjectRepository subjectRepository; // Still needed for subject existence
+    private final SubjectRepository subjectRepository;
     private final TeacherClassRepository teacherClassRepository;
     private final ClassSubjectRepository classSubjectRepository;
     private final EnrollmentRepository enrollmentRepository;
+    private final ClassRepository classRepository;
 
     /**
      * Helper to get the authenticated user's ID.
-     * Assumes your UserDetails implementation contains the ID or can be retrieved from username.
      */
     public Long getCurrentAuthenticatedUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // Ensure user is authenticated and not anonymous
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
-            return null; // No valid authenticated user
+            return null;
         }
 
-        String currentUsername = authentication.getName(); // This gives you the username
-
-        // Use the UserRepository to find the User entity by username
-        // UserRepository should have: Optional<User> findByUsername(String username);
+        String currentUsername = authentication.getName();
         Optional<User> currentUserOptional = userRepository.findByUsername(currentUsername);
-
-        // If a User is found, return their ID; otherwise, return null.
         return currentUserOptional.map(User::getId).orElse(null);
     }
 
     /**
-     * Checks if the authenticated user (a student) is the owner of the given student ID.
-     * Applicable for student accessing their own data.
-     *
-     * @param studentIdNum The ID of the student to check.
-     * @return true if the current authenticated user is the student with the given ID.
+     * Helper to get the authenticated user's username
+     */
+    public String getCurrentAuthenticatedUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+        return authentication.getName();
+    }
+
+    // ==================== STUDENT OWNERSHIP METHODS ====================
+
+    /**
+     * Checks if the authenticated user is the owner of the given studentIdNum
      */
     public boolean isStudentOwner(String studentIdNum) {
         Long authenticatedUserId = getCurrentAuthenticatedUserId();
         if (authenticatedUserId == null) {
-            return false; // No authenticated user or ID not found
+            return false;
         }
 
-        // 1. Find the student by their studentIdNum
         Optional<Student> studentOptional = studentRepository.findByStudentIdNum(studentIdNum);
-
-        // 2. Check if the student exists AND if their associated user ID matches the authenticated user's ID
         if (studentOptional.isPresent()) {
             Student student = studentOptional.get();
-            //the actual way to get the user ID associated with the student,
-            //because Student extends User, it might just be `student.getId()`:(the User ID).
-            return Objects.equals(authenticatedUserId, student.getId()); // Assuming Student.getId() returns the base User ID
+            return Objects.equals(authenticatedUserId, student.getId());
         }
 
-        return false; // Student not found
+        return false;
     }
 
     /**
-     * Checks if the authenticated user (a student) is the owner of a specific grade.
-     *
-     * @param gradeId The ID of the grade to check.
-     * @return true if the current authenticated user owns the grade.
+     * Checks if the authenticated user is the owner of a specific grade
      */
     public boolean isStudentOwnerOfGrade(Long gradeId) {
         Long authenticatedUserId = getCurrentAuthenticatedUserId();
@@ -105,48 +102,120 @@ ObjectLevelSecurity {
     }
 
     /**
-     * Checks if the authenticated user (a teacher) is assigned to a specific subject.
-     * A teacher is assigned to a subject if they teach any class that offers this subject.
-     *
-     * @param subjectCode The ID of the subject to check.
-     * @return true if the current authenticated teacher is assigned to this subject.
+     * Checks if the authenticated student is enrolled in a specific class
      */
-    public boolean isTeacherAssignedToSubject(String subjectCode) {
-        Long authenticatedUserId = getCurrentAuthenticatedUserId(); // This is the teacher's ID
+    public boolean isStudentEnrolledInClass(Long classId) {
+        Long authenticatedUserId = getCurrentAuthenticatedUserId();
         if (authenticatedUserId == null) return false;
 
-        // 1. Get all classes the teacher is assigned to
-        List<TeacherClass> teacherClasses = teacherClassRepository.findByTeacher_TeacherIdNum(String.valueOf(authenticatedUserId));
+        Optional<Student> studentOptional = studentRepository.findById(authenticatedUserId);
+        if (studentOptional.isEmpty()) return false;
+
+        String studentIdNum = studentOptional.get().getStudentIdNum();
+        List<Enrollment> enrollments = enrollmentRepository.findByStudentStudentIdNum(studentIdNum);
+        
+        return enrollments.stream()
+                .anyMatch(e -> Objects.equals(e.getClassEntity().getId(), classId));
+    }
+
+    /**
+     * Checks if the authenticated student owns a specific enrollment
+     */
+    public boolean isStudentOwnerOfEnrollment(Long enrollmentId) {
+        Long authenticatedUserId = getCurrentAuthenticatedUserId();
+        if (authenticatedUserId == null) return false;
+
+        Optional<Enrollment> enrollmentOptional = enrollmentRepository.findById(enrollmentId);
+        if (enrollmentOptional.isEmpty()) return false;
+
+        return Objects.equals(authenticatedUserId, enrollmentOptional.get().getStudent().getId());
+    }
+
+    // ==================== TEACHER OWNERSHIP & ASSIGNMENT METHODS ====================
+
+    /**
+     * Checks if the authenticated user is the owner of the given teacherIdNum.
+     * This method gets the authenticated user by username, looks up their Teacher record,
+     * and compares their teacherIdNum with the one provided.
+     */
+    public boolean isTeacherOwner(String teacherIdNum) {
+        String currentUsername = getCurrentAuthenticatedUsername();
+        if (currentUsername == null) return false;
+
+        // Get the authenticated user
+        Optional<User> userOptional = userRepository.findByUsername(currentUsername);
+        if (userOptional.isEmpty()) return false;
+
+        User user = userOptional.get();
+        
+        // Check if this user is a Teacher
+        Optional<Teacher> authenticatedTeacherOptional = teacherRepository.findById(user.getId());
+        if (authenticatedTeacherOptional.isEmpty()) return false;
+
+        Teacher authenticatedTeacher = authenticatedTeacherOptional.get();
+        
+        // Compare the authenticated teacher's teacherIdNum with the provided one
+        return Objects.equals(authenticatedTeacher.getTeacherIdNum(), teacherIdNum);
+    }
+
+    /**
+     * Checks if the authenticated teacher is assigned to a specific class
+     */
+    public boolean isTeacherAssignedToClass(Long classId) {
+        Long authenticatedUserId = getCurrentAuthenticatedUserId();
+        if (authenticatedUserId == null) return false;
+
+        Optional<Teacher> teacherOptional = teacherRepository.findById(authenticatedUserId);
+        if (teacherOptional.isEmpty()) return false;
+
+        String teacherIdNum = teacherOptional.get().getTeacherIdNum();
+        List<TeacherClass> teacherClasses = teacherClassRepository.findByTeacher_TeacherIdNum(teacherIdNum);
+        
+        return teacherClasses.stream()
+                .anyMatch(tc -> Objects.equals(tc.getClassEntity().getId(), classId));
+    }
+
+    /**
+     * Checks if the authenticated teacher is assigned to a specific subject
+     */
+    public boolean isTeacherAssignedToSubject(String subjectCode) {
+        Long authenticatedUserId = getCurrentAuthenticatedUserId();
+        if (authenticatedUserId == null) return false;
+
+        Optional<Teacher> teacherOptional = teacherRepository.findById(authenticatedUserId);
+        if (teacherOptional.isEmpty()) return false;
+
+        String teacherIdNum = teacherOptional.get().getTeacherIdNum();
+        
+        List<TeacherClass> teacherClasses = teacherClassRepository.findByTeacher_TeacherIdNum(teacherIdNum);
         if (teacherClasses.isEmpty()) {
             return false;
         }
 
-        // 2. Get all subjects offered in those classes
-        Set<Long> subjectsTaughtByTeacher = new HashSet<>();
+        Set<String> subjectsTaughtByTeacher = new HashSet<>();
         for (TeacherClass tc : teacherClasses) {
             List<ClassSubject> classSubjects = classSubjectRepository.findByClassEntity_Id(tc.getClassEntity().getId());
             subjectsTaughtByTeacher.addAll(classSubjects.stream()
-                    .map(cs -> cs.getSubject().getId())
+                    .map(cs -> cs.getSubject().getSubjectCode())
                     .collect(Collectors.toSet()));
         }
 
-        // 3. Check if the target subjectId is among the subjects the teacher teaches
         return subjectsTaughtByTeacher.contains(subjectCode);
     }
 
     /**
-     * Checks if the authenticated user (a teacher) is assigned to a specific student.
-     * A teacher is assigned to a student if they teach any class that the student is enrolled in.
-     *
-     * @param studentIdNum The ID of the student to check.
-     * @return true if the current authenticated teacher is assigned to this student.
+     * Checks if the authenticated teacher is assigned to a specific student
      */
     public boolean isTeacherAssignedToStudent(String studentIdNum) {
-        Long authenticatedUserId = getCurrentAuthenticatedUserId(); // This is the teacher's ID
+        Long authenticatedUserId = getCurrentAuthenticatedUserId();
         if (authenticatedUserId == null) return false;
 
-        // 1. Get all classes the teacher is assigned to
-        Set<Long> teacherClassIds = teacherClassRepository.findByTeacher_TeacherIdNum(String.valueOf(authenticatedUserId)).stream()
+        Optional<Teacher> teacherOptional = teacherRepository.findById(authenticatedUserId);
+        if (teacherOptional.isEmpty()) return false;
+
+        String teacherIdNum = teacherOptional.get().getTeacherIdNum();
+
+        Set<Long> teacherClassIds = teacherClassRepository.findByTeacher_TeacherIdNum(teacherIdNum).stream()
                 .map(tc -> tc.getClassEntity().getId())
                 .collect(Collectors.toSet());
 
@@ -154,7 +223,6 @@ ObjectLevelSecurity {
             return false;
         }
 
-        // 2. Get all classes the student is enrolled in
         Set<Long> studentClassIds = enrollmentRepository.findByStudentStudentIdNum(studentIdNum).stream()
                 .map(e -> e.getClassEntity().getId())
                 .collect(Collectors.toSet());
@@ -163,43 +231,31 @@ ObjectLevelSecurity {
             return false;
         }
 
-        // 3. Check for any common classes between teacher's assignments and student's enrollments
-        // If there's an overlap, the teacher is effectively assigned to the student.
         return teacherClassIds.stream().anyMatch(studentClassIds::contains);
     }
 
     /**
-     * Checks if the authenticated user (a teacher) is assigned to a specific grade.
-     * A teacher is assigned to a grade if:
-     * 1. They recorded the grade, OR
-     * 2. They teach the subject associated with that grade, OR
-     * 3. They are assigned to the student associated with that grade.
-     *
-     * @param gradeId The ID of the grade to check.
-     * @return true if the current authenticated teacher is assigned to this grade.
+     * Checks if the authenticated teacher is assigned to a specific grade
      */
     public boolean isTeacherAssignedToGrade(Long gradeId) {
-        Long authenticatedUserId = getCurrentAuthenticatedUserId(); // This is the teacher's ID
+        Long authenticatedUserId = getCurrentAuthenticatedUserId();
         if (authenticatedUserId == null) return false;
 
         Optional<Grade> gradeOptional = gradeRepository.findById(gradeId);
         if (gradeOptional.isEmpty()) {
-            return false; // Grade not found
+            return false;
         }
         Grade grade = gradeOptional.get();
 
-        // Check 1: Did the teacher record this grade?
         if (grade.getRecordedByTeacher() != null && Objects.equals(grade.getRecordedByTeacher().getId(), authenticatedUserId)) {
             return true;
         }
 
-        // Check 2: Does the teacher teach the subject of this grade?
-        if (isTeacherAssignedToSubject(String.valueOf(grade.getSubject().getId()))) {
+        if (isTeacherAssignedToSubject(grade.getSubject().getSubjectCode())) {
             return true;
         }
 
-        // Check 3: Is the teacher assigned to the student of this grade?
-        if (isTeacherAssignedToStudent(String.valueOf(grade.getStudent().getId()))) {
+        if (isTeacherAssignedToStudent(grade.getStudent().getStudentIdNum())) {
             return true;
         }
 
@@ -207,15 +263,22 @@ ObjectLevelSecurity {
     }
 
     /**
-     * Checks if the authenticated user (a teacher) is assigned to a specific student AND subject.
-     *
-     * @param studentIdNum The ID of the student.
-     * @param subjectCode The ID of the subject.
-     * @return true if the current authenticated teacher is assigned to both the student and the subject.
+     * Checks if the authenticated teacher is assigned to a specific enrollment
      */
-    public boolean isTeacherAssignedToStudentAndSubject(String studentIdNum, String subjectCode) {
-        // This is a combination of the two previous checks
-        return isTeacherAssignedToStudent(studentIdNum) && isTeacherAssignedToSubject(subjectCode);
+    public boolean isTeacherAssignedToEnrollment(Long enrollmentId) {
+        Optional<Enrollment> enrollmentOptional = enrollmentRepository.findById(enrollmentId);
+        if (enrollmentOptional.isEmpty()) return false;
+
+        Enrollment enrollment = enrollmentOptional.get();
+        
+        return isTeacherAssignedToClass(enrollment.getClassEntity().getId()) ||
+               isTeacherAssignedToSubject(enrollment.getSubject().getSubjectCode());
     }
 
+    /**
+     * Checks if the authenticated teacher is assigned to both a student and subject
+     */
+    public boolean isTeacherAssignedToStudentAndSubject(String studentIdNum, String subjectCode) {
+        return isTeacherAssignedToStudent(studentIdNum) && isTeacherAssignedToSubject(subjectCode);
+    }
 }

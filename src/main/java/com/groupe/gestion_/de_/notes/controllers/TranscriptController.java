@@ -1,19 +1,11 @@
 package com.groupe.gestion_.de_.notes.controllers;
 
-import com.groupe.gestion_.de_.notes.services.ServiceInterface.TranscriptService;
-import com.groupe.gestion_.de_.notes.security.Utils.ObjectLevelSecurity;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/transcripts")
@@ -32,7 +24,7 @@ public class TranscriptController {
             @ApiResponse(responseCode = "404", description = "Student not found")
     })
     @GetMapping("/student/{studentIdNum}")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('STUDENT') and @securityService.isStudentOwner(#studentIdNum))")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('STUDENT') and @objectLevelSecurity.isStudentOwner(#studentIdNum))")
     public ResponseEntity<byte[]> getStudentTranscript(@PathVariable String studentIdNum) throws IOException {
         byte[] pdfBytes = transcriptService.generateTranscriptForStudent(studentIdNum);
 

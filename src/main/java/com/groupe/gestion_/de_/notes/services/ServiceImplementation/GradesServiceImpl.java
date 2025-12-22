@@ -1,23 +1,31 @@
 package com.groupe.gestion_.de_.notes.services.ServiceImplementation;
 
-import com.groupe.gestion_.de_.notes.services.ServiceInterface.GradesService;
-import com.groupe.gestion_.de_.notes.exceptions.*;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.groupe.gestion_.de_.notes.dto.GradeRequest;
+import com.groupe.gestion_.de_.notes.dto.GradeResponse;
+import com.groupe.gestion_.de_.notes.dto.StudentResponse;
+import com.groupe.gestion_.de_.notes.dto.SubjectResponse;
+import com.groupe.gestion_.de_.notes.dto.TeacherResponse;
+import com.groupe.gestion_.de_.notes.exceptions.BadRequestException;
+import com.groupe.gestion_.de_.notes.exceptions.ResourceNotFoundException;
 import com.groupe.gestion_.de_.notes.model.Grade;
 import com.groupe.gestion_.de_.notes.model.Student;
 import com.groupe.gestion_.de_.notes.model.Subject;
 import com.groupe.gestion_.de_.notes.model.Teacher;
-import com.groupe.gestion_.de_.notes.dto.*;
 import com.groupe.gestion_.de_.notes.repository.GradeRepository;
 import com.groupe.gestion_.de_.notes.repository.StudentRepository;
 import com.groupe.gestion_.de_.notes.repository.SubjectRepository;
 import com.groupe.gestion_.de_.notes.repository.TeacherRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.groupe.gestion_.de_.notes.services.ServiceInterface.GradesService;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -94,6 +102,21 @@ public class GradesServiceImpl implements GradesService {
     @Transactional(readOnly = true)
     public List<GradeResponse> getAllGrades() {
         return gradeRepository.findAll().stream()
+                .map(this::mapGradeToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<GradeResponse> getGradesByTeacher(String teacherIdNum) {
+        // Find the teacher by teacherIdNum
+        Teacher teacher = teacherRepository.findByTeacherIdNum(teacherIdNum)
+                .orElseThrow(() -> new NoSuchElementException("Teacher not found with ID: " + teacherIdNum));
+        
+        // Get all grades recorded by this teacher
+        List<Grade> grades = gradeRepository.findByRecordedByTeacher_TeacherIdNum(teacherIdNum);
+        
+        // Map to response DTOs
+        return grades.stream()
                 .map(this::mapGradeToResponse)
                 .collect(Collectors.toList());
     }

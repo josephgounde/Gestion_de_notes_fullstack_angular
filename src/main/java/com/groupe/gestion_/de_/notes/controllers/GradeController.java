@@ -1,23 +1,32 @@
 package com.groupe.gestion_.de_.notes.controllers;
 
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.groupe.gestion_.de_.notes.dto.GradeRequest;
 import com.groupe.gestion_.de_.notes.dto.GradeResponse;
-import com.groupe.gestion_.de_.notes.services.ServiceInterface.GradesService;
 import com.groupe.gestion_.de_.notes.security.Utils.ObjectLevelSecurity;
+import com.groupe.gestion_.de_.notes.services.ServiceInterface.GradesService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springdoc.core.service.SecurityService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/grades")
@@ -86,6 +95,24 @@ public class GradeController {
         List<GradeResponse> grades = gradeService.getAllGrades();
         return ResponseEntity.ok(grades);
     }
+
+        /**
+         * Retrieves all grades recorded by a specific teacher.
+         * TEACHERs can only view grades they recorded themselves.
+         * ADMINs can view grades recorded by any teacher.
+         */
+        @Operation(summary = "Get grades by teacher", description = "Retrieve all grades recorded by a specific teacher.")
+        @ApiResponses(value = {
+                @ApiResponse(responseCode = "200", description = "Grades retrieved successfully"),
+                @ApiResponse(responseCode = "403", description = "Forbidden: Teachers can only view their own grades"),
+                @ApiResponse(responseCode = "404", description = "Teacher not found")
+        })
+        @GetMapping("/teacher/{teacherIdNum}")
+        @PreAuthorize("hasRole('ADMIN') or (hasRole('TEACHER') and @objectLevelSecurity.isTeacherOwner(#teacherIdNum))")
+        public ResponseEntity<List<GradeResponse>> getGradesByTeacher(@PathVariable String teacherIdNum) {
+        List<GradeResponse> grades = gradeService.getGradesByTeacher(teacherIdNum);
+        return ResponseEntity.ok(grades);
+        }
 
     /**
      * Retrieves all grades for a specific student.
